@@ -1,0 +1,10 @@
+# ignore everything (datasets, images, weights, zip)...
+*
+# ...except folders, code and readmes
+!*/
+!*.py
+!README.txt
+!VIVA_README.md
+!.gitignore
+__pycache__/
+LP IV Updated Datasets/
