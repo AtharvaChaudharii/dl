@@ -3,6 +3,7 @@
 # ...except folders, code and readmes
 !*/
 !*.py
+!*.ipynb
 !README.txt
 !VIVA_README.md
 !.gitignore
