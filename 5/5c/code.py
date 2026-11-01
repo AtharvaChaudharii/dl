@@ -46,11 +46,9 @@ print("Test Accuracy:", acc)
 # h. Visualize the prediction
 images, labels = next(iter(test_ds))
 pred = np.argmax(model.predict(images), axis=1)
-for i in range(9):
-    plt.subplot(3, 3, i + 1)
-    plt.imshow(images[i].numpy().astype("uint8"))
-    plt.title("T:" + class_names[labels[i]] + "\nP:" + class_names[pred[i]], fontsize=8)
-    plt.axis("off")
+plt.imshow(images[0].numpy().astype("uint8"))
+plt.title("True: " + class_names[labels[0]] + "   Predicted: " + class_names[pred[0]])
+plt.axis("off")
 plt.show()
 
 # i. Fine tune: unfreeze the top 4 layers of VGG16 and retrain with small learning rate
