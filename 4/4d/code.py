@@ -7,36 +7,30 @@ from gensim.models import Word2Vec
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 from sklearn.metrics.pairwise import cosine_similarity
 
-# 1. Data collection and preprocessing
+# 1. LOAD
 data = pd.read_csv("twitter_dataset.csv")
+texts = data["Text"].tolist()
 
+# 2. CLEAN (lowercase, keep letters, tokenize, remove stop words)
 def clean(text):
-    text = text.lower()                          # lowercase
-    text = re.sub(r"http\S+|@\w+|#", " ", text)  # remove links, @mentions, #
-    text = re.sub("[^a-z ]", " ", text)          # keep only letters
-    return [w for w in text.split() if w not in ENGLISH_STOP_WORDS]   # tokenize + remove stop words
+    text = re.sub("[^a-z ]", " ", text.lower())
+    return [w for w in text.split() if w not in ENGLISH_STOP_WORDS]
 
-docs = data["Text"].apply(clean).tolist()
+sentences = [clean(t) for t in texts]
 
-# 2a. Train Word2Vec CBOW model (sg=0 means CBOW)
-model = Word2Vec(docs, vector_size=100, window=5, min_count=2, sg=0, epochs=10)
+# 3. TRAIN WORD2VEC CBOW (sg=0 means CBOW)
+w2v = Word2Vec(sentences, vector_size=100, window=5, min_count=1, sg=0, epochs=10)
+print("Vocabulary size:", len(w2v.wv))
 
-# 2b/2d. Document vector = average of embeddings of all its words
+# 4. DOCUMENT VECTOR = average of all its word embeddings
 def doc_vector(words):
-    vecs = [model.wv[w] for w in words if w in model.wv]
-    if len(vecs) == 0:
-        return np.zeros(100)
-    return np.mean(vecs, axis=0)
+    words = [w for w in words if w in w2v.wv]                # ignore unknown words typed by user
+    return np.mean([w2v.wv[w] for w in words], axis=0) if words else np.zeros(100)
 
-doc_vectors = np.array([doc_vector(d) for d in docs])
+x = np.array([doc_vector(s) for s in sentences])
 
-# 2c/3. Recommendation: cosine similarity between user input and every document
-def recommend(user_input, top_n=5):
-    query = doc_vector(clean(user_input)).reshape(1, -1)
-    scores = cosine_similarity(query, doc_vectors)[0]
-    best = scores.argsort()[::-1][:top_n]          # highest similarity first
-    for i in best:
-        print(round(scores[i], 3), "->", data["Text"][i][:100].replace("\n", " "))
-
-user_input = input("Enter keywords (e.g. 'sell economy development'): ")
-recommend(user_input)
+# 5. RECOMMEND - cosine similarity between user input and every tweet
+query = doc_vector(clean(input("Enter keywords (e.g. 'sell economy development'): ")))
+scores = cosine_similarity([query], x)[0]
+for i in scores.argsort()[::-1][:5]:                          # top 5, highest first
+    print(round(scores[i], 3), "->", texts[i][:100].replace("\n", " "))

@@ -4,26 +4,23 @@ import re
 from gensim.models import Word2Vec
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 
-# a. Data preparation
-text = open("document3.txt", encoding="utf-8").read().lower()
+# 1. LOAD (split the document into sentences)
+texts = open("document3.txt", encoding="utf-8").read().split(".")
 
-sentences = []
-for s in text.split("."):                    # split into sentences
-    s = re.sub("[^a-z0-9 ]", " ", s)         # remove punctuation
-    words = [w for w in s.split() if w not in ENGLISH_STOP_WORDS]
-    if words:
-        sentences.append(words)
+# 2. CLEAN (lowercase, keep letters, tokenize, remove stop words)
+def clean(text):
+    text = re.sub("[^a-z ]", " ", text.lower())
+    return [w for w in text.split() if w not in ENGLISH_STOP_WORDS]
 
-print("Sentences:", sentences)
+sentences = [clean(t) for t in texts]
 
-# b. Train Word2Vec CBOW model (sg=0 means CBOW)
-# small document -> min_count=1 and more epochs
-model = Word2Vec(sentences, vector_size=50, window=3, min_count=1, sg=0, epochs=200)
-print("Vocabulary:", model.wv.index_to_key)
+# 3. TRAIN WORD2VEC CBOW (sg=0 means CBOW)
+w2v = Word2Vec(sentences, vector_size=100, window=5, min_count=1, sg=0, epochs=200)   # tiny text -> many epochs
+print("Vocabulary size:", len(w2v.wv))
 
-# c. Evaluate results
-print("\nEmbedding of 'influenza' (first 10 values):", model.wv["influenza"][:10])
-print("\nMost similar to 'influenza':", model.wv.most_similar("influenza", topn=5))
-print("\nMost similar to 'transmission':", model.wv.most_similar("transmission", topn=5))
-print("\nMost similar to 'virus':", model.wv.most_similar("virus", topn=5))
-print("\nSimilarity influenza vs covid:", model.wv.similarity("influenza", "covid"))
+# 4. EVALUATE - check embeddings with examples
+words = w2v.wv.index_to_key[:5]                      # 5 most common words
+print("Embedding of", words[0], ":", w2v.wv[words[0]][:10])
+for w in words:
+    print("Most similar to", w, ":", w2v.wv.most_similar(w, topn=5))
+print("Similarity", words[0], words[1], ":", w2v.wv.similarity(words[0], words[1]))

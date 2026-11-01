@@ -67,9 +67,9 @@ THINGS TO REMEMBER / TEACHER MAY ASK
 
 5A, 5B, 5C  (Transfer learning VGG16)
     -> Uses the teacher's vgg16_weights...notop.h5 file, so works OFFLINE.
-    -> All 3 codes are the same; only DATA and SIZE lines change.
+    -> All 3 codes are the same; only the DATA line changes.
     -> 5C: teacher's folder had an extra "train/Ankle-boot" subfolder which would become
-       an 11th wrong class. It was NOT copied. 28x28 images resized to 64 (VGG needs >= 32).
+       an 11th wrong class. It was NOT copied. All images are resized to 64x64 (VGG needs >= 32).
     -> 5A: Caltech-101 has 102 folders (includes BACKGROUND_Google). Slowest to train -
        reduce epochs if it takes too long.
 

@@ -8,13 +8,13 @@ from tensorflow.keras.applications.vgg16 import VGG16, preprocess_input
 
 DATA = "fashion_mnist"
 WEIGHTS = "vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5"   # pre-trained weights (offline)
-SIZE = 64          # images are 28x28, VGG needs at least 32x32, so resize to 64
+SIZE = 64          # resize all images to 64x64 (VGG needs at least 32x32)
 
 # b. Loading and preprocessing data (80% train, 20% test, resized)
 train_ds = keras.utils.image_dataset_from_directory(
-    DATA, validation_split=0.2, subset="training", seed=1, image_size=(SIZE, SIZE), batch_size=32, color_mode="rgb")
+    DATA, validation_split=0.2, subset="training", seed=1, image_size=(SIZE, SIZE), batch_size=32)
 test_ds = keras.utils.image_dataset_from_directory(
-    DATA, validation_split=0.2, subset="validation", seed=1, image_size=(SIZE, SIZE), batch_size=32, color_mode="rgb")
+    DATA, validation_split=0.2, subset="validation", seed=1, image_size=(SIZE, SIZE), batch_size=32)
 class_names = train_ds.class_names
 print("Classes:", len(class_names))
 

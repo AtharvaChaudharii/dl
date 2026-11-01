@@ -2,55 +2,35 @@
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import classification_report
 from tensorflow import keras
 
-# 1. Preprocess: load data and scale features
+# 1. LOAD + SCALE
 data = pd.read_csv("creditcard.csv")
-x = data.drop("Class", axis=1).values     # Class: 0 = normal, 1 = fraud
-y = data["Class"].values
+x = data.drop("Class", axis=1).values
+y = data["Class"].values                     # 0 = normal, 1 = fraud
+x = MinMaxScaler().fit_transform(x)          # scale features 0-1
 
-x = StandardScaler().fit_transform(x)
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
+# 2. NORMAL DATA ONLY (non-fraud)
+x_normal = x[y == 0]
 
-# train ONLY on normal (non-fraud) transactions
-x_train_normal = x_train[y_train == 0]
-
-# 2. Build autoencoder (encoder -> small bottleneck -> decoder)
-n = x.shape[1]   # 30 features
+# 3. MODEL (Dense autoencoder: shrink -> grow back)
+n = x.shape[1]
 model = keras.Sequential([
-    keras.layers.Dense(16, activation="relu", input_shape=(n,)),   # encoder
-    keras.layers.Dense(8, activation="relu"),                       # bottleneck
-    keras.layers.Dense(16, activation="relu"),                      # decoder
-    keras.layers.Dense(n, activation="linear")                      # output = input size
+    keras.layers.Dense(32, activation="relu", input_shape=(n,)),   # encoder
+    keras.layers.Dense(16, activation="relu"),                      # bottleneck
+    keras.layers.Dense(32, activation="relu"),                      # decoder
+    keras.layers.Dense(n)                                           # output = input size
 ])
-
-# 4. Compile with Optimizer, Loss and Evaluation Metric
 model.compile(optimizer="adam", loss="mse", metrics=["mae"])
 model.summary()
 
-# input = output, because autoencoder learns to rebuild its input
-h = model.fit(x_train_normal, x_train_normal, epochs=10, batch_size=256, validation_split=0.1)
+# 4. TRAIN (input = output)
+model.fit(x_normal, x_normal, epochs=10, batch_size=256)
 
-# 3. Reconstruction error + threshold
-train_pred = model.predict(x_train_normal)
-train_error = np.mean((x_train_normal - train_pred) ** 2, axis=1)
-threshold = np.percentile(train_error, 95)    # top 5% error = suspicious
-print("Threshold:", threshold)
-
-test_pred = model.predict(x_test)
-test_error = np.mean((x_test - test_pred) ** 2, axis=1)
-y_pred = (test_error > threshold).astype(int)  # error > threshold -> fraud
-
-print(confusion_matrix(y_test, y_pred))
-print(classification_report(y_test, y_pred))
-
-# plot loss
-plt.plot(h.history["loss"], label="train loss")
-plt.plot(h.history["val_loss"], label="val loss")
-plt.xlabel("Epoch")
-plt.legend()
-plt.show()
+# 5. DETECT (high reconstruction error = anomaly)
+error = np.mean((x - model.predict(x)) ** 2, axis=1)
+threshold = np.percentile(error[y == 0], 95)
+y_pred = (error > threshold).astype(int)
+print(classification_report(y, y_pred))

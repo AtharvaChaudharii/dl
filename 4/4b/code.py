@@ -5,30 +5,24 @@ import pandas as pd
 from gensim.models import Word2Vec
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 
-# a. Data collection and preprocessing
+# 1. LOAD
 data = pd.read_csv("twitter_dataset.csv")
+texts = data["Text"].tolist()
 
+# 2. CLEAN (lowercase, keep letters, tokenize, remove stop words)
 def clean(text):
-    text = text.lower()                          # lowercase
-    text = re.sub(r"http\S+|@\w+|#", " ", text)  # remove links, @mentions, #
-    text = re.sub("[^a-z ]", " ", text)          # keep only letters
-    return [w for w in text.split() if w not in ENGLISH_STOP_WORDS]   # tokenize + remove stop words
+    text = re.sub("[^a-z ]", " ", text.lower())
+    return [w for w in text.split() if w not in ENGLISH_STOP_WORDS]
 
-tweets = data["Text"].apply(clean).tolist()
-print("Example tweet tokens:", tweets[0])
+sentences = [clean(t) for t in texts]
 
-# b. Train Word2Vec CBOW model (sg=0 means CBOW)
-model = Word2Vec(tweets, vector_size=100, window=5, min_count=2, sg=0, epochs=10)
-print("Vocabulary size:", len(model.wv))
+# 3. TRAIN WORD2VEC CBOW (sg=0 means CBOW)
+w2v = Word2Vec(sentences, vector_size=100, window=5, min_count=1, sg=0, epochs=10)
+print("Vocabulary size:", len(w2v.wv))
 
-# c. Evaluate results - check learned embeddings with examples
-words = model.wv.index_to_key[:5]     # 5 most common words
-print("Common words:", words)
-
-w = words[0]
-print("\nEmbedding of '" + w + "' (first 10 values):", model.wv[w][:10])
-
+# 4. EVALUATE - check embeddings with examples
+words = w2v.wv.index_to_key[:5]                      # 5 most common words
+print("Embedding of", words[0], ":", w2v.wv[words[0]][:10])
 for w in words:
-    print("\nMost similar to '" + w + "':", model.wv.most_similar(w, topn=5))
-
-print("\nSimilarity between", words[0], "and", words[1], ":", model.wv.similarity(words[0], words[1]))
+    print("Most similar to", w, ":", w2v.wv.most_similar(w, topn=5))
+print("Similarity", words[0], words[1], ":", w2v.wv.similarity(words[0], words[1]))

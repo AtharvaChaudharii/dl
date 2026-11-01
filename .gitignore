@@ -6,6 +6,7 @@
 !*.ipynb
 !README.txt
 !VIVA_README.md
+!Code_Changes.pdf
 !.gitignore
 __pycache__/
 LP IV Updated Datasets/

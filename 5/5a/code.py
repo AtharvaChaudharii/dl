@@ -8,7 +8,7 @@ from tensorflow.keras.applications.vgg16 import VGG16, preprocess_input
 
 DATA = "caltech-101"
 WEIGHTS = "vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5"   # pre-trained weights (offline)
-SIZE = 128
+SIZE = 64          # resize all images to 64x64 (VGG needs at least 32x32)
 
 # b. Loading and preprocessing data (80% train, 20% test, resized)
 train_ds = keras.utils.image_dataset_from_directory(

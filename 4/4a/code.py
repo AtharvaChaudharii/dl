@@ -3,60 +3,43 @@
 import re
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from gensim.models import Word2Vec
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 from sklearn.model_selection import train_test_split
 from tensorflow import keras
 
-# 1. Data preparation
+# 1. LOAD
 data = pd.read_csv("IMDB Dataset.csv")
+texts = data["review"].tolist()
+y = (data["sentiment"] == "positive").astype(int).values      # positive = 1, negative = 0
 
+# 2. CLEAN (lowercase, keep letters, tokenize, remove stop words)
 def clean(text):
-    text = text.lower()                          # lowercase
-    text = re.sub("<.*?>", " ", text)            # remove html like <br />
-    text = re.sub("[^a-z ]", " ", text)          # keep only letters
-    return [w for w in text.split() if w not in ENGLISH_STOP_WORDS]   # tokenize + remove stop words
+    text = re.sub("[^a-z ]", " ", text.lower())
+    return [w for w in text.split() if w not in ENGLISH_STOP_WORDS]
 
-sentences = data["review"].apply(clean).tolist()              # list of sentences (list of words)
-labels = (data["sentiment"] == "positive").astype(int).values  # positive = 1, negative = 0
+sentences = [clean(t) for t in texts]
 
-x_train_words, x_test_words, y_train, y_test = train_test_split(sentences, labels, test_size=0.2)
-
-# 2 & 3. Train Word2Vec with CBOW (sg=0) on training data -> builds the vocabulary + embeddings
-w2v = Word2Vec(x_train_words, vector_size=100, window=5, min_count=2, sg=0)
+# 3. TRAIN WORD2VEC CBOW (sg=0 means CBOW) -> vocabulary + word embeddings
+w2v = Word2Vec(sentences, vector_size=100, window=5, min_count=1, sg=0, epochs=10)
 print("Vocabulary size:", len(w2v.wv))
 
-# Document representation = average of all its word embeddings
+# 4. DOCUMENT VECTOR = average of all its word embeddings
 def doc_vector(words):
-    vecs = [w2v.wv[w] for w in words if w in w2v.wv]
-    if len(vecs) == 0:
-        return np.zeros(100)
-    return np.mean(vecs, axis=0)
+    words = [w for w in words if w in w2v.wv]                # ignore unknown words typed by user
+    return np.mean([w2v.wv[w] for w in words], axis=0) if words else np.zeros(100)
 
-x_train = np.array([doc_vector(d) for d in x_train_words])
-x_test = np.array([doc_vector(d) for d in x_test_words])
+x = np.array([doc_vector(s) for s in sentences])
 
-# Feed forward neural network for classification
+# 5. CLASSIFY with a feed forward neural network
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
 model = keras.Sequential([
     keras.layers.Dense(64, activation="relu", input_shape=(100,)),
-    keras.layers.Dense(32, activation="relu"),
-    keras.layers.Dense(1, activation="sigmoid")      # positive / negative
+    keras.layers.Dense(1, activation="sigmoid")              # positive / negative
 ])
 model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
-model.summary()
+model.fit(x_train, y_train, epochs=10)
 
-h = model.fit(x_train, y_train, epochs=10, validation_data=(x_test, y_test))
-
-# 4. Evaluate on test set
 loss, acc = model.evaluate(x_test, y_test)
 print("Test Loss:", loss)
 print("Test Accuracy:", acc)
-
-plt.plot(h.history["accuracy"], label="train acc")
-plt.plot(h.history["val_accuracy"], label="val acc")
-plt.plot(h.history["loss"], label="train loss")
-plt.plot(h.history["val_loss"], label="val loss")
-plt.xlabel("Epoch")
-plt.legend()
-plt.show()

@@ -200,14 +200,14 @@ A neural network that learns to **copy its input to its output**. It has:
 Difference between input and output. We use mean squared error: `mean((x - x_reconstructed)²)`
 
 **Q. How did you choose the threshold?**
-95th percentile of errors on normal training data – meaning only 5% of normal data is above it. Anything above is flagged.
+95th percentile of the errors of normal data: `np.percentile(error[y == 0], 95)` – only 5% of normal data is above it. Anything above is flagged.
 
 **Q. Why loss = mse?** Output is numbers (not classes), so we measure squared difference between input and output.
 
 **Q. 3A – Why train only on non-fraud data?**
 Fraud is very rare (492 out of 2,84,807 ≈ 0.17%). This is **class imbalance**. A normal classifier would just say "not fraud" always. Autoencoder learns normal patterns, so fraud stands out.
 
-**Q. 3A – Why StandardScaler?** Columns like Amount and Time have very large values compared to V1–V28. Scaling puts all features on the same scale (mean 0, std 1).
+**Q. 3A – Why MinMaxScaler?** Columns like Amount and Time have very large values compared to V1–V28. Scaling puts all features in the same 0–1 range so no column dominates.
 
 **Q. 3A – What are V1–V28?** Features already transformed by PCA to hide private customer details.
 
@@ -278,11 +278,11 @@ A model (by Google) that learns word embeddings from text. Two types:
 **Q. Explain Word2Vec parameters.**
 - `vector_size=100` – each word becomes 100 numbers
 - `window=5` – 5 words on each side are taken as context
-- `min_count=2` – ignore words that appear less than 2 times
+- `min_count=1` – keep every word (min_count=2 would ignore words that appear only once)
 - `epochs` – number of training passes
 
 **Q. What preprocessing did you do?**
-Lowercase → remove HTML/links/symbols → split into words (tokenize) → remove stop words.
+Lowercase → keep only letters (remove numbers, symbols, punctuation) → split into words (tokenize) → remove stop words.
 
 **Q. What are stop words?** Very common words with little meaning: "the, is, a, an, and". Removed to keep important words.
 
@@ -347,7 +347,7 @@ After training the new layers, we **unfreeze the top few layers** (last 4) of VG
 
 **Q. What is image_dataset_from_directory?** Keras function that loads images from folders; each folder name becomes the class label.
 
-**Q. 5C – Why resize Fashion MNIST to 64×64 and RGB?** VGG16 needs at least 32×32 and 3 colour channels; Fashion MNIST is 28×28 grayscale.
+**Q. Why resize all images to 64×64?** VGG16 needs at least 32×32, and 64 is small enough to train fast. Fashion MNIST is 28×28 grayscale, so it is resized and loaded as RGB (3 channels), which `image_dataset_from_directory` does by default.
 
 **Q. Datasets?**
 - Caltech-101: 101 object categories (+ background), ~9,000 images.
