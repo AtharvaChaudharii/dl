@@ -224,7 +224,14 @@ Uses Conv + MaxPooling to compress the image (encoder) and Conv + UpSampling to 
 
 **Q. What is UpSampling?** Opposite of pooling – makes the image bigger (repeats pixels).
 
-**Q. 3B – MVTec AD?** Images of industrial objects (bottle, screw, cable…) — normal and defective. We train on normal (good) images; defects give high error.
+**Q. 3B – Statement says MVTec AD, why ECG?**
+MVTec AD (images of normal/defective industrial objects) was not provided, so ECG is used. It is still a convolutional autoencoder, but with Conv1D because ECG is a 1-D signal.
+
+**Q. What is Conv1D vs Conv2D?**
+Conv2D slides a 2-D filter over images (height × width). Conv1D slides a 1-D filter along a sequence/signal (e.g. 140 ECG readings). Same idea, one less dimension.
+
+**Q. 3B – Why reshape to (140, 1)?**
+Conv1D needs (length, channels). ECG has 140 readings and 1 channel.
 
 **Q. 3C, 3D – What is LSTM?**
 Long Short-Term Memory – a type of RNN (Recurrent Neural Network) that remembers information over time. Used for **sequence/time-series** data.
@@ -249,6 +256,17 @@ Group of consecutive readings (we use 10). LSTM learns patterns over these 10 st
 **Q. 3D – NASA Turbofan?** Sensor readings (temperature, pressure, speed…) of jet engines over cycles until failure. Fault_Label = 1 means faulty.
 
 **Q. 3D – Why drop unit, cycle, RUL?** They are IDs/counters, not sensor readings. RUL (Remaining Useful Life) would directly leak the answer.
+
+**Q. 3E – Statement says NSL-KDD, why ECG?**
+NSL-KDD was not provided, so the ECG dataset was used. The method is the same: train on normal data, high reconstruction error = anomaly (intrusion / abnormal heartbeat).
+
+**Q. 3E – What is the ECG dataset?**
+Each row is one heartbeat with 140 readings; last column 1 = normal, 0 = abnormal. We flip it so 1 = anomaly.
+
+**Q. 3E – What about "encoding categorical features"?**
+Needed for NSL-KDD (columns like protocol = tcp/udp are text, converted to numbers with one-hot / label encoding). ECG has only numbers, so only scaling is needed.
+
+**Q. What is one-hot encoding?** Converting a text category into 0/1 columns, e.g. protocol tcp → [1,0,0], udp → [0,1,0], icmp → [0,0,1].
 
 **Q. 3F – How is Y detected?**
 Trained on all letters except Y (label 24). Y was never seen, so it gets higher reconstruction error → flagged as anomaly.

@@ -15,14 +15,10 @@ NOTE: All code was syntax-checked but NOT run (TensorFlow was not installed).
 
 !!! PROBLEMS - MUST TAKE CARE !!!
 ---------------------------------
-3B  (MVTec AD anomaly detection)
-    -> DATASET MISSING. Teacher's folder does NOT have MVTec AD.
-    -> Download one category (e.g. "bottle") from Kaggle and put it in 3/3b like:
-         3/3b/bottle/train/good/*.png
-         3/3b/bottle/test/good/*.png
-         3/3b/bottle/test/<defect name>/*.png
-    -> If you use another category, change  folder = "bottle"  in code.py.
-    -> Ask the teacher if they will give this dataset in the lab.
+3B  (Industrial Equipment Anomaly Detection)
+    -> Statement says MVTec AD (images) - NOT provided, so ECG dataset (ecg.csv) is used.
+    -> Still a CONVOLUTIONAL autoencoder, but Conv1D (ECG is a 1-D signal, not an image).
+    -> Same as 3E except: x.reshape(-1, 140, 1) and Conv1D / MaxPooling1D / UpSampling1D layers.
 
 1B  (FNN Fashion MNIST)
     -> Statement step (b) says "CIFAR10" - this is a TYPO.
@@ -30,6 +26,13 @@ NOTE: All code was syntax-checked but NOT run (TensorFlow was not installed).
 
 1D
     -> No 1D statement was given, so there is no 1D folder.
+
+3E  (Network Intrusion Detection)
+    -> Statement says NSL-KDD dataset, but we use the ECG dataset (ecg.csv) instead.
+    -> ECG has no categorical columns, so the "encode categorical features" step is not needed
+       (only scaling is done). Say this if asked.
+    -> In ecg.csv the last column is 1 = normal, 0 = abnormal, so the code flips it
+       to match our pattern (1 = anomaly).
 
 
 THINGS TO REMEMBER / TEACHER MAY ASK
@@ -78,6 +81,6 @@ FOLDER SUMMARY
 --------------
 1  FNN    : 1a MNIST | 1b Fashion MNIST | 1c CIFAR10 | 1e Sign MNIST
 2  CNN    : 2a CIFAR10 | 2b MNIST | 2c Sign MNIST
-3  AutoEnc: 3a CreditCard | 3b MVTec (missing) | 3c Energy | 3d NASA Turbofan | 3f Sign MNIST (Y anomaly)
+3  AutoEnc: 3a CreditCard | 3b ECG (Conv1D) | 3c Energy | 3d NASA Turbofan | 3e ECG | 3f Sign MNIST (Y anomaly)
 4  CBOW   : 4a IMDB | 4b Twitter | 4c document3 | 4d Twitter recommendation
 5  VGG16  : 5a Caltech-101 | 5b Intel Images | 5c Fashion MNIST images
